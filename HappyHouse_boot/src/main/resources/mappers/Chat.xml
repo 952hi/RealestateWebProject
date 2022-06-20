@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.vue.mapper.ChatMapper">
+
+	<!-- 채팅방 개설 및 알람 설정 -->
+	<insert id="GenerateRoom" parameterType="ChatRoomDto">
+		insert into chat_room
+		(user_id, seller_id)
+		values (#{user_id}, #{seller_id})
+	</insert>
+
+
+	<!-- 새로운 메세지 전송 시 알람 설정 -->
+	<update id="UpdateAlertOn" parameterType="ChatRoomDto">
+		update chat_room
+		set
+		<if test="user_id != null">userside_alert = 1</if>
+		<if test="seller_id != null">sellerside_alert = 1</if>
+		where no = #{no}
+	</update>
+	<update id="UpdateAlertOff" parameterType="ChatRoomDto">
+		update chat_room
+		set 
+		<if test="user_id != null">userside_alert = 0</if>
+		<if test="seller_id != null">sellerside_alert = 0</if>
+		where no = #{no}
+	</update>
+	<!-- 이미 해당 유저와 판매자 사이에 채팅방 존재하는지 확인 -->
+	<select id="SelectOneRoom" parameterType="ChatRoomDto"
+		resultType="int">
+		select count(*)
+		from chat_room
+		where user_id = #{user_id} and
+		seller_id = #{seller_id}
+	</select>
+
+	<!-- 사용자 혹은 판매자 각자의 채팅방 목록 불러오기 -->
+	<select id="LoadChatRoomList" parameterType="chatRoomDto"
+		resultType="ChatRoomDto">
+		select no, user_id, seller_id, date
+		<if test="user_id != null">,userside_alert</if>
+		<if test="seller_id != null">,sellerside_alert</if>
+		from chat_room
+		<where>
+			<if test="user_id != null">user_id = #{user_id}</if>
+			<if test="seller_id != null">seller_id = #{seller_id}</if>
+		</where>
+		union
+		select no, user_id, seller_id, date
+		<if test="user_id != null">,userside_alert</if>
+		<if test="seller_id != null">,sellerside_alert</if>
+		from chat_room
+		where user_id = 'admin';
+	</select>
+
+	<!--각 방의 전체 채팅 목록 불러오기 -->
+	<select id="GetRoomChatHistory" resultType="ChatHistoryDto">
+		select no, id,
+		message, date
+		from chat_history
+		where room_no = #{room_no}
+	</select>
+
+	<!-- 채팅방 삭제 -->
+	<delete id="DeleteRoom">
+		delete from chat_room
+		where no = #{no}
+	</delete>
+
+	<insert id="InsertChatMessage" parameterType="ChatHistoryDto">
+		insert into chat_history (room_no, id, message)
+		values(#{room_no}, #{id}, #{message})
+	</insert>
+
+	<!-- 예시 -->
+	<insert id="insertBoard" parameterType="board">
+		insert into threadboard(
+		title, id, content
+		) values (
+		#{title}, #{id}, #{content}
+		)
+	</insert>
+</mapper>
+

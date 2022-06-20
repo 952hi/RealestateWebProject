@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.vue.mapper.BoardMapper">
+
+	<!-- 게시글 전체 조회 -->
+	<select id="selectBoard" resultType="board">
+		select no, id, title,
+		content, time
+		from threadboard
+		order by no desc
+	</select>
+	
+	<select id="LAST_INSERT_ID" resultType="int">
+	select LAST_INSERT_ID();
+	</select>
+	
+	<!-- 판매게시글 전체 조회 -->
+	<select id="selectall" resultType="BoardAllDto">
+		select t.no,t.id,t.time,t.title,h.deposit,h.roadnameAddress,h.detail,h.monthlyFee,(select min(no) from imgboard where t.no=board_no) noo,(select original_name from imgboard where noo=no ) name, (select save_path from imgboard where noo=no ) path
+		from threadboard t
+		join tradeboard h
+		on t.no=h.boardNo;
+	</select>
+
+	<!-- 게시글 상세 조회 -->
+	<select id="selectBoardByNo" resultType="board">
+		select no, id, title,
+		content, time
+		from threadboard
+		where no = #{no}
+	</select>
+
+	<!-- 게시글 등록 -->
+	<insert id="insertBoard" parameterType="board">
+		insert into threadboard(
+		title, id
+		) values (
+		#{title}, #{id}
+		)
+	</insert>
+
+	<!-- 게시글 수정 -->
+	<update id="updateBoard" parameterType="board">
+		update threadboard
+		set title = #{title},
+		id = #{id},
+		content = #{content}
+		where no = #{no}
+	</update>
+
+	<!-- 게시글 삭제 -->
+	<delete id="deleteBoard" parameterType="int">
+		delete from threadboard
+		where no = #{no}
+	</delete>
+	
+	<insert id="insertBoardFileList" parameterType="BoardFileDto">
+		<selectKey keyProperty="board_id" resultType="int" order="BEFORE">
+			select LAST_INSERT_ID();
+		</selectKey>
+		insert into imgboard (board_no, original_name, save_path, size)
+		values 
+		<foreach collection="list" item="item" separator=",">
+			(#{board_id}, #{item.original_name}, #{item.save_path}, #{item.size})
+		</foreach>
+	</insert>
+	
+	<select id="selectBoardFileList" parameterType="int" resultType="BoardFileDto">
+		select no, board_no, original_name,format(round(size / 1024), 0) as size
+		from imgboard
+		where board_no = #{no} and delete_yn = 'n'
+	</select>
+	
+	<select id="selectBoardFileInformation" parameterType="map" resultType="BoardFileDto">
+		select original_name, save_path, size
+		from imgboard
+		where no = #{no} and delete_yn = 'n'
+	</select>
+	
+	<select id="selectBoardFileRealPath" parameterType="BoardFileDto" resultType="String">
+		select save_path
+		from imgboard
+		where original_name = #{original_name} and board_no = #{board_no}
+	</select>
+	
+	<insert id="insertTradeThread" parameterType="TradeThreadDto">
+		<selectKey keyProperty="boardNo" resultType="int" order="BEFORE">
+			select LAST_INSERT_ID();
+		</selectKey>
+		insert into tradeboard(boardNo, contractOpt, deposit, monthlyFee, commonMaintainFee,loan,detail, roadnameAddress,detailAddress )
+		values(#{boardNo}, #{contractOpt}, #{deposit}, #{monthlyFee},#{commonMaintainFee}, #{loan}, #{detail}, #{roadnameAddress}, #{detailAddress});
+	</insert>
+	
+	<select id="selectTradeThread" parameterType="int" resultType="TradeThreadDto">
+		select contractOpt, deposit, monthlyFee, commonMaintainFee, loan, date, detail, roadnameAddress, detailAddress
+		from tradeboard
+		where boardNo = #{boardNo}
+	</select>
+	
+	<insert id="insertCommonMaintainItem" parameterType="String">
+		<selectKey keyProperty="boardNo" resultType="int" order="BEFORE">
+			select LAST_INSERT_ID();
+		</selectKey>
+		insert into commonmaintainitem(boardNo, item)
+		values 
+		<foreach collection="list" item="item" separator=",">
+			(#{boardNo}, #{item})
+		</foreach>
+	</insert>
+	
+	<select id="selectCommonMaintainItem" parameterType="int" resultType="String">
+		select item
+		from commonmaintainitem
+		where boardNo = #{boardNo}
+	</select>
+	
+	<insert id="insertEachFeeItem">
+		<selectKey keyProperty="boardNo" resultType="int" order="BEFORE">
+			select LAST_INSERT_ID();
+		</selectKey>
+		insert into eachFeeItem
+		values
+		<foreach collection="list" item="item" separator=",">
+			(#{boardNo}, #{item})
+		</foreach>
+	</insert>
+	<select id="selectEachFeeItem" parameterType="int" resultType="String">
+			select item
+		from eachfeeitem
+		where boardNo = #{boardNo}
+	</select>
+</mapper>
+

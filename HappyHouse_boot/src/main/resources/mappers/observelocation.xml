@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.vue.mapper.ObserveMapper">
+
+	<!-- 게시글 전체 조회 -->
+	<select id="selectSido" resultType="string">
+		select DISTINCT 지역명
+		from observelocation;
+	</select>
+	
+	<!-- 게시글 상세 조회 -->
+	<select id="selectGuDong" parameterType="string" resultType="string">
+		select 측정소명 
+		from observelocation
+		where 지역명 = #{Sido};
+	</select>
+</mapper>
+
